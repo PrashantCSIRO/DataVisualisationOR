@@ -1,3 +1,10 @@
+# streamlit_app.py
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.express as px
+
 # Set Streamlit page configuration
 st.set_page_config(page_title="Water Quality Data Visualisation", layout="wide")
 
@@ -31,18 +38,6 @@ with st.sidebar:
     - All plots update automatically when selections change.
     - You can explore data for **all ponds** or a **single pond**.
     """)
-
-# streamlit_app.py
-
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.express as px
-
-# Set Streamlit page configuration
-st.set_page_config(page_title="Water Quality Data Visualisation", layout="wide")
-
-st.title("Water Quality Data Visualisation App")
 
 # Upload file
 uploaded_file = st.file_uploader("Upload your spreadsheet (CSV, XLS, or XLSX)", type=['csv', 'xls', 'xlsx'])
