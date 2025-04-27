@@ -1,3 +1,37 @@
+# Set Streamlit page configuration
+st.set_page_config(page_title="Water Quality Data Visualisation", layout="wide")
+
+# Add instructions in the sidebar
+with st.sidebar:
+    st.title("Instructions")
+
+    st.markdown("""
+    ### Data Formatting Requirements:
+    - Upload a **CSV**, **XLS**, or **XLSX** file.
+    - The file can contain **multiple sheets** (if Excel).
+    - **First column**: `Pond` names (text).
+    - **Second column**: `Sampling Date` (date format preferred).
+    - **Subsequent columns**: Water quality parameters (numeric values).
+    - **Values** with:
+      - `<number` (e.g., `<0.1`) will be **converted to 0**.
+      - Blank cells or `-` will also be **converted to 0**.
+
+    ### How to Use the App:
+    1. **Upload** your dataset.
+    2. **Select** a sheet (if applicable).
+    3. **Choose** the Pond and/or Sampling Date.
+    4. **Visualise**:
+       - Scatter plots between any two parameters.
+       - Time series of selected parameters.
+       - Ratio of two parameters over time.
+    5. **Download** plots if needed (use Plotly's inbuilt export options).
+
+    ### Additional Notes:
+    - Dates on x-axis are shown monthly to avoid crowding.
+    - All plots update automatically when selections change.
+    - You can explore data for **all ponds** or a **single pond**.
+    """)
+
 # streamlit_app.py
 
 import streamlit as st
