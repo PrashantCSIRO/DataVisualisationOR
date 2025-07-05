@@ -95,6 +95,121 @@ if uploaded_file:
     else:
         st.markdown("---")
 
+        # Time Series Plot (Parameters over Time)
+        st.subheader("Time Series Line Chart of Parameters Over Time")
+        selected_params_time = st.multiselect(
+            "Select Parameters to Plot Over Time", 
+            options=parameters, 
+            default=parameters[:1]
+        )  # Let user select which parameters to plot
+
+        time_df = df_reset.copy()  # Copy the cleaned dataframe for plotting
+        if selected_pond != "All":
+            time_df = time_df[time_df['Pond'] == selected_pond]  # Filter by selected pond if not "All"
+
+        # Use scatter plot to show only markers (no lines)
+        time_series_fig = px.scatter(
+            time_df,  # Data to plot
+            x='Sampling Date',  # X-axis is the sampling date
+            y=selected_params_time,  # Y-axis is the selected parameters
+            labels={'Sampling Date': 'Sampling Date'},  # Axis label
+            title="Parameter(s) Over Time"  # Plot title
+        )
+
+        time_series_fig.update_traces(mode='markers')  # Ensure only markers (dots) are shown, no lines
+
+        # Update layout for time series plot to keep axis lines, bold axis titles, black ticks, and plain number formatting
+        time_series_fig.update_layout(
+            xaxis_title="<b>Sampling Date</b>",  # X-axis title in bold
+            yaxis_title="<b>Parameter Values</b>",  # Y-axis title in bold
+            font=dict(color='black', family='Arial', size=14),  # All fonts bold and black
+            xaxis=dict(
+                showline=True,  # Show x-axis line
+                linecolor='black',  # X-axis line color
+                tickformat="%b %Y",  # Format x-axis ticks as Month Year
+                tickangle=90,        # Rotate x-axis labels for readability
+                dtick="M1",          # Set tick interval to monthly
+                ticks='outside',     # Show ticks outside the axis
+                tickcolor='black',   # Set tick color to black
+                tickfont=dict(color='black', family='Arial', size=14),  # Set tick label color to black and bold
+                separatethousands=True,  # Use thousands separator for numbers
+                exponentformat='none',   # Do not use scientific notation
+                showexponent='none'      # Do not show exponent
+            ),
+            yaxis=dict(
+                showline=True,  # Show y-axis line
+                linecolor='black',  # Y-axis line color
+                ticks='outside',    # Show ticks outside the axis
+                tickcolor='black',  # Set tick color to black
+                tickfont=dict(color='black', family='Arial', size=14),  # Set tick label color to black and bold
+                separatethousands=True,  # Use thousands separator for numbers
+                exponentformat='none',   # Do not use scientific notation
+                showexponent='none',     # Do not show exponent
+                automargin=True,         # Allow axis title to wrap if too long
+            )
+        )
+
+        st.plotly_chart(time_series_fig, use_container_width=True)  # Display the plot in Streamlit
+
+        st.markdown("---")
+
+        # Time Series Plot (Ratios over Time)
+        st.subheader("Time Series Line Chart of Parameter Ratios Over Time")  # Section header for ratio plot
+        ratio_numerator = st.selectbox("Select Numerator Parameter", options=parameters, key="numerator")  # Dropdown for numerator
+        ratio_denominator = st.selectbox("Select Denominator Parameter", options=parameters, key="denominator")  # Dropdown for denominator
+
+        ratio_df = time_df.copy()  # Copy the filtered dataframe for ratio calculation
+        # Avoid division by zero and handle missing values
+        ratio_df['Ratio'] = ratio_df[ratio_numerator] / ratio_df[ratio_denominator].replace(0, np.nan)  # Calculate ratio
+        ratio_df = ratio_df.dropna(subset=['Ratio'])  # Drop rows with NaN ratios
+
+        # Use scatter plot to show only markers (no lines) for ratio over time
+        ratio_fig = px.scatter(
+            ratio_df,  # Data to plot
+            x='Sampling Date',  # X-axis is the sampling date
+            y='Ratio',  # Y-axis is the calculated ratio
+            labels={'Sampling Date': 'Sampling Date', 'Ratio': f"{ratio_numerator}/{ratio_denominator}"},  # Axis labels
+            title=f"Ratio of {ratio_numerator} to {ratio_denominator} Over Time"  # Plot title
+        )
+
+        ratio_fig.update_traces(mode='markers')  # Ensure only markers (dots) are shown, no lines
+
+        # Update layout for ratio plot to keep axis lines, bold axis titles, black ticks, and plain number formatting
+        ratio_fig.update_layout(
+            xaxis_title=f"<b>Sampling Date</b>",  # X-axis title in bold and dark black
+            yaxis_title=f"<b>{ratio_numerator}/{ratio_denominator}</b>",  # Y-axis title in bold and dark black, no "Ratio"
+            font=dict(color='black', family='Arial', size=14),  # All fonts bold and black
+            xaxis=dict(
+                showline=True,  # Show x-axis line
+                linecolor='black',  # X-axis line color
+                tickformat="%b %Y",  # Format x-axis ticks as Month Year
+                tickangle=90,        # Rotate x-axis labels for readability
+                dtick="M1",          # Monthly interval
+                ticks='outside',     # Show ticks outside the axis
+                tickcolor='black',   # Set tick color to black
+                tickfont=dict(color='black', family='Arial', size=14),  # Set tick label color to black and bold
+                separatethousands=True,  # Use thousands separator for numbers
+                exponentformat='none',   # Do not use scientific notation
+                showexponent='none'      # Do not show exponent
+            ),
+            yaxis=dict(
+                showline=True,  # Show y-axis line
+                linecolor='black',  # Y-axis line color
+                ticks='outside',    # Show ticks outside the axis
+                tickcolor='black',  # Set tick color to black
+                tickfont=dict(color='black', family='Arial', size=14),  # Set tick label color to black and bold
+                separatethousands=True,  # Use thousands separator for numbers
+                exponentformat='none',   # Do not use scientific notation
+                showexponent='none',     # Do not show exponent
+                automargin=True,         # Allow axis title to wrap if too long
+            ),
+            height=600  # Increase plot height by 1.5 times (default is 400)
+        )
+
+        st.plotly_chart(ratio_fig, use_container_width=True)  # Display the plot in Streamlit
+
+        st.markdown("---")
+
         # Scatter Plot
         st.subheader("Scatter Plot between Two Parameters")
         col1, col2 = st.columns(2)
@@ -103,76 +218,44 @@ if uploaded_file:
         with col2:
             y_param = st.selectbox("Select Y-axis Parameter", options=parameters, key="yparam")
 
-        scatter_fig = px.scatter(filtered_df, 
-                                 x=x_param, 
-                                 y=y_param, 
-                                 color='Pond',
-                                 hover_data=['Sampling Date'],
-                                 labels={x_param: x_param, y_param: y_param},
-                                 title=f"Scatter Plot: {x_param} vs {y_param}")
+        scatter_fig = px.scatter(
+            filtered_df, 
+            x=x_param, 
+            y=y_param, 
+            color='Pond',
+            hover_data=['Sampling Date'],
+            labels={x_param: x_param, y_param: y_param},
+            title=f"Scatter Plot: {x_param} vs {y_param}"
+        )
 
-        st.plotly_chart(scatter_fig, use_container_width=True)
-
-        st.markdown("---")
-
-        # Time Series Plot (Parameters over Time)
-        st.subheader("Time Series Line Chart of Parameters Over Time")
-        selected_params_time = st.multiselect("Select Parameters to Plot Over Time", options=parameters, default=parameters[:1])
-
-        time_df = df_reset.copy()
-        if selected_pond != "All":
-            time_df = time_df[time_df['Pond'] == selected_pond]
-
-        time_series_fig = px.line(time_df, 
-                                  x='Sampling Date', 
-                                  y=selected_params_time,
-                                  markers=True,
-                                  labels={'Sampling Date': 'Sampling Date'},
-                                  title="Parameter(s) Over Time")
-
-        time_series_fig.update_layout(
-            xaxis_title="Sampling Date",
-            yaxis_title="Parameter Values",
+        # Update layout for scatter plot to keep axis lines, bold axis titles, black ticks, and plain number formatting
+        scatter_fig.update_layout(
+            xaxis_title=f"<b>{x_param}</b>",  # X-axis title in bold, single line
+            yaxis_title=f"<b>{y_param}</b>",  # Y-axis title in bold, single line
+            font=dict(color='black', family='Arial', size=14),  # All fonts bold and black
             xaxis=dict(
-                tickformat="%b %Y",
-                tickangle=90,
-                dtick="M1"  # Monthly interval
+                showline=True,  # Show x-axis line
+                linecolor='black',  # X-axis line color
+                ticks='outside',    # Show ticks outside the axis
+                tickcolor='black',  # Set tick color to black
+                tickfont=dict(color='black', family='Arial', size=14),  # Set tick label color to black and bold
+                separatethousands=True,  # Use thousands separator for numbers
+                exponentformat='none',   # Do not use scientific notation
+                showexponent='none',     # Do not show exponent
+                automargin=True,         # Allow axis title to wrap if too long
+            ),
+            yaxis=dict(
+                showline=True,  # Show y-axis line
+                linecolor='black',  # Y-axis line color
+                ticks='outside',    # Show ticks outside the axis
+                tickcolor='black',  # Set tick color to black
+                tickfont=dict(color='black', family='Arial', size=14),  # Set tick label color to black and bold
+                separatethousands=True,  # Use thousands separator for numbers
+                exponentformat='none',   # Do not use scientific notation
+                showexponent='none',     # Do not show exponent
+                automargin=True,         # Allow axis title to wrap if too long
             )
         )
 
-        st.plotly_chart(time_series_fig, use_container_width=True)
-
-        st.markdown("---")
-
-        # Time Series Plot (Ratios over Time)
-        st.subheader("Time Series Line Chart of Parameter Ratios Over Time")
-        ratio_numerator = st.selectbox("Select Numerator Parameter", options=parameters, key="numerator")
-        ratio_denominator = st.selectbox("Select Denominator Parameter", options=parameters, key="denominator")
-
-        ratio_df = time_df.copy()
-        # Avoid division by zero and handle missing values
-        ratio_df['Ratio'] = ratio_df[ratio_numerator] / ratio_df[ratio_denominator].replace(0, np.nan)
-        ratio_df = ratio_df.dropna(subset=['Ratio'])  # Drop rows with NaN ratios
-
-        ratio_fig = px.line(ratio_df, 
-                            x='Sampling Date', 
-                            y='Ratio',
-                            markers=True,
-                            labels={'Sampling Date': 'Sampling Date', 'Ratio': f"{ratio_numerator}/{ratio_denominator}"},
-                            title=f"Ratio of {ratio_numerator} to {ratio_denominator} Over Time")
-
-        ratio_fig.update_layout(
-            xaxis_title="Sampling Date",
-            yaxis_title=f"Ratio: {ratio_numerator}/{ratio_denominator}",
-            xaxis=dict(
-                tickformat="%b %Y",
-                tickangle=90,
-                dtick="M1"  # Monthly interval
-            )
-        )
-
-        st.plotly_chart(ratio_fig, use_container_width=True)
-
-else:
-    st.info("Please upload a CSV, XLS, or XLSX file to proceed.")
+        st.plotly_chart(scatter_fig, use_container_width=True)  # Display the scatter plot
 
